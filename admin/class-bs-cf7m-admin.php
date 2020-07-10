@@ -100,6 +100,10 @@ class Bs_Cf7m_Admin {
 
 	}
 
+
+
+	/* PLUGIN SETTINGS */
+
     public function add_plugin_settings_page() {
         add_options_page( 'Contact Form 7 Monitor', 'CF7 Monitor', 'manage_options', 'bs_cf7m_settings', array( $this, 'show_plugin_settings_page' ) );
     }
@@ -231,5 +235,86 @@ class Bs_Cf7m_Admin {
 		<?php
 
 	}
+
+	public function after_interval_update( $old_value, $value, $option ) {
+	    update_option( 'bs_cf7m_last_time', time() );
+
+		add_filter( 'cron_schedules', function( $schedules ) use ( $value ){
+			return $this->cron_interval( $schedules, $value );
+		} );
+
+		$schedule_check_forms_timestamp = wp_next_scheduled( 'bs_cf7m_check_forms' );
+		wp_unschedule_event( $schedule_check_forms_timestamp, 'bs_cf7m_check_forms' );
+	    wp_schedule_event( time(), 'bs_cf7m_interval', 'bs_cf7m_check_forms' );
+
+	    Bs_Cf7m_Shared_Features::bs_logit( 'Check', 'interval update' );
+    }
+
+	public function cron_interval( $schedules, $value = '' ) {
+		if ( !$value )
+			$value = intval( get_option( 'bs_cf7m_interval' ) ?: 24 );
+
+		$schedules['bs_cf7m_interval'] = array(
+			'interval'  =>  $value * HOUR_IN_SECONDS,
+			'display'   =>  __( "Every {$value} hours", 'bs-cf7m' )
+		);
+
+		return $schedules;
+	}
+
+    /* CONTACT FORM 7 MONITOR */
+
+    public function add_new_request( $contact_form ) {
+		global $wpdb;
+
+        $wpdb->insert(
+        	$wpdb->prefix . 'bs_cf7m_requests',
+	        array(
+	        	'form_id'   =>  $contact_form->id,
+		        'time'      =>  time()
+	        ),
+	        array( '%d', '%d' )
+        );
+
+    }
+
+    public function check_forms() {
+    	global $wpdb;
+	    $table_name = $wpdb->prefix . 'bs_cf7m_requests';
+	    $last_time = get_option( 'bs_cf7m_last_time' );
+	    $active_forms = get_option( 'bs_cf7m_active_forms' );
+	    $current_time = time();
+	    $form_names = array();
+
+	    foreach ( $active_forms as $form_id ) {
+	    	$requests_count = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name} WHERE time > {$last_time} AND time < {$current_time}" );
+
+	    	if ( $requests_count == 0 )
+	    		$form_names[] = get_post( $form_id )->post_title;
+	    }
+
+	    if ( count( $form_names ) > 0 )
+	        do_action( 'bs_cf7m_zero_requests', $form_names );
+
+	    update_option( 'bs_cf7m_last_time', time() );
+    }
+
+    public function send_requests_alert( $form_names ) {
+    	$emails = get_option( 'bs_cf7m_emails' );
+    	$interval = get_option( 'bs_cf7m_interval' );
+    	$emails = explode( ' ', $emails );
+
+    	$body = "<p>Hi there,</p>";
+    	$body .= "<p>Hi there,</p>";
+
+    	$site_url = home_url();
+	    add_filter( 'wp_mail_content_type', 'set_html_content_type' );
+	    wp_mail(
+	    	$emails,
+		    __( "No new applications were received from the forms on site {$site_url} within {$interval} hours", 'bs_cf7m' ),
+		    $body
+	    );
+	    remove_filter( 'wp_mail_content_type', 'set_html_content_type' );
+    }
 
 }

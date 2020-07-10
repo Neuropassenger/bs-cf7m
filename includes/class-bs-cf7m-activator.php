@@ -31,6 +31,21 @@ class Bs_Cf7m_Activator {
 	 */
 	public static function activate() {
 
+		// Database
+		global $wpdb;
+		$table_name = $wpdb->prefix . 'bs_cf7m_requests';
+		$charset_collate = $wpdb->get_charset_collate();
+
+		$sql_query = "CREATE TABLE {$table_name} (
+			id int NOT NULL AUTO_INCREMENT,
+			form_id int NOT NULL,
+			time bigint NOT	 NULL,
+			PRIMARY KEY (id)
+		) {$charset_collate};";
+
+		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+		dbDelta( $sql_query );
+
 	}
 
 }
