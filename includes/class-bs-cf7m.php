@@ -112,6 +112,11 @@ class Bs_Cf7m {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-bs-cf7m-i18n.php';
 
 		/**
+		 * The class responsible for defining all shared features & utilities.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-bs-cf7m-shared-features.php';
+
+		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-bs-cf7m-admin.php';
@@ -156,6 +161,9 @@ class Bs_Cf7m {
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
+
+        $this->loader->add_action( 'admin_menu', $plugin_admin, 'add_plugin_settings_page' );
+        $this->loader->add_action( 'admin_init', $plugin_admin, 'add_plugin_settings' );
 
 	}
 

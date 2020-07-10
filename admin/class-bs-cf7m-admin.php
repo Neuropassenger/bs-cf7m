@@ -100,4 +100,136 @@ class Bs_Cf7m_Admin {
 
 	}
 
+    public function add_plugin_settings_page() {
+        add_options_page( 'Contact Form 7 Monitor', 'CF7 Monitor', 'manage_options', 'bs_cf7m_settings', array( $this, 'show_plugin_settings_page' ) );
+    }
+
+    function show_plugin_settings_page() {
+        ?>
+        <div class="wrap">
+            <h2><?php echo get_admin_page_title() ?></h2>
+
+            <form action="options.php" method="POST">
+                <?php
+                // скрытые защитные поля
+                settings_fields( 'bs_cf7m_general' );
+                // секции с настройками (опциями)
+                do_settings_sections( 'bs_cf7m_settings' );
+                submit_button();
+                ?>
+            </form>
+        </div>
+        <?php
+    }
+
+    public function add_plugin_settings() {
+
+	    add_settings_section(
+            'bs_cf7m_main_setting_section',
+            __( 'Main Settings', 'bs-cf7m' ),
+            '',
+            'bs_cf7m_settings'
+        );
+
+        register_setting(
+            'bs_cf7m_general',
+            'bs_cf7m_active_forms',
+            array( 'sanitize_callback' => array( $this, 'sanitize_active_forms_callback' ) )
+        );
+
+        add_settings_field(
+            'bs_cf7m_active_forms_field',
+            __( 'What forms should be observed', 'bs-cf7m' ),
+            array( $this, 'show_active_forms_field' ),
+            'bs_cf7m_settings',
+            'bs_cf7m_main_setting_section'
+        );
+
+	    register_setting(
+		    'bs_cf7m_general',
+		    'bs_cf7m_interval',
+		    array( 'sanitize_callback' => array( $this, 'sanitize_interval_callback' ) )
+	    );
+
+        add_settings_field(
+            'bs_cf7m_interval_field',
+            __( 'Inspection Interval (in hours)', 'bs-cf7m' ),
+            array( $this, 'show_interval_field' ),
+            'bs_cf7m_settings',
+            'bs_cf7m_main_setting_section'
+        );
+
+	    register_setting(
+		    'bs_cf7m_general',
+		    'bs_cf7m_emails',
+		    array( 'sanitize_callback' => array( $this, 'sanitize_emails_callback' ) )
+	    );
+
+	    add_settings_field(
+		    'bs_cf7m_emails_field',
+		    __( 'Email addresses for notifications (separated by a space)', 'bs-cf7m' ),
+		    array( $this, 'show_emails_field' ),
+		    'bs_cf7m_settings',
+		    'bs_cf7m_main_setting_section'
+	    );
+
+    }
+
+    function sanitize_active_forms_callback( $options ) {
+
+	foreach( $options as $id => $option ){
+		$options[$id] = intval( $option );
+	}
+
+	return $options;
+
+}
+
+	function show_active_forms_field() {
+
+		$forms = get_posts( array(
+				'post_type'     =>  'wpcf7_contact_form',
+				'post_status'   =>  'publish',
+			)
+		);
+
+		$active_forms = get_option( 'bs_cf7m_active_forms' );
+
+		foreach ( $forms as $form ) {
+			?>
+            <p><input type='checkbox' name='bs_cf7m_active_forms[]' <?php checked( in_array( $form->ID, $active_forms ), 1 ); ?> value='<?php echo $form->ID; ?>'>
+                <label><?php echo $form->post_title; ?></label></p>
+			<?php
+		}
+
+	}
+
+	function sanitize_interval_callback( $value ) {
+		return intval( $value );
+	}
+
+	function show_interval_field() {
+
+		$interval = get_option( 'bs_cf7m_interval' );
+
+        ?>
+        <p><input style="width: 300px;" type='number' name='bs_cf7m_interval' value='<?php echo $interval; ?>'></p>
+        <?php
+
+	}
+
+	function sanitize_emails_callback( $value ) {
+		return sanitize_text_field( $value );
+	}
+
+	function show_emails_field() {
+
+		$emails = get_option( 'bs_cf7m_emails' );
+
+		?>
+        <p><input style="width: 300px;" type='text' name='bs_cf7m_emails' value='<?php echo $emails; ?>'></p>
+		<?php
+
+	}
+
 }
