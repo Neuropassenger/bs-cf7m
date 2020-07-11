@@ -284,37 +284,68 @@ class Bs_Cf7m_Admin {
 	    $last_time = get_option( 'bs_cf7m_last_time' );
 	    $active_forms = get_option( 'bs_cf7m_active_forms' );
 	    $current_time = time();
-	    $form_names = array();
+	    $not_used_form_names = array();
 
 	    foreach ( $active_forms as $form_id ) {
 	    	$requests_count = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name} WHERE time > {$last_time} AND time < {$current_time}" );
 
 	    	if ( $requests_count == 0 )
-	    		$form_names[] = get_post( $form_id )->post_title;
+	    		$not_used_form_names[] = get_post( $form_id )->post_title;
 	    }
 
-	    if ( count( $form_names ) > 0 )
-	        do_action( 'bs_cf7m_zero_requests', $form_names );
+	    if ( count( $not_used_form_names ) > 0 )
+	        do_action( 'bs_cf7m_zero_requests', $not_used_form_names );
 
 	    update_option( 'bs_cf7m_last_time', time() );
     }
 
-    public function send_requests_alert( $form_names ) {
+    public function send_requests_alert( $not_used_form_names ) {
+    	if ( count( $not_used_form_names ) == 0 )
+    		return;
+
     	$emails = get_option( 'bs_cf7m_emails' );
     	$interval = get_option( 'bs_cf7m_interval' );
     	$emails = explode( ' ', $emails );
+    	$domain = str_replace( 'http://', '', str_replace( 'https://', '', site_url() ) );
+    	$settings_page_permalink = get_admin_url( null, 'options-general.php?page=bs_cf7m_settings' );
+	    $last_date = date( 'F j Y  H:i', get_option( 'bs_cf7m_last_time' ) );
+	    $current_date = date( 'F j Y  H:i', time() );
 
+    	$headers = "From: Contact Form 7 Monitor <informer@{$domain}>";
+    	$subject = get_bloginfo( 'name' ) . " |  No new applications were received";
     	$body = "<p>Hi there,</p>";
-    	$body .= "<p>Hi there,</p>";
+    	$body .= "<p>No applications have been received from the forms below in the past {$interval} hours:</p>";
 
-    	$site_url = home_url();
-	    add_filter( 'wp_mail_content_type', 'set_html_content_type' );
+    	$body .= "<ul>";
+    	foreach ( $not_used_form_names as $form_name ) {
+			$body .= "<li>{$form_name}</li>";
+	    }
+	    $body .= "</ul>";
+
+    	$body .= "<p>Check the work of the specified forms, or increase the scan interval.</p>";
+    	$body .= "<p>This email was sent by the Contact Form 7 Monitor plugin. If you do not want to receive these emails anymore, delete your email address on the <a href='{$settings_page_permalink}'>plugin settings page</a>.</p>";
+
+    	$body .= "<hr>";
+
+	    $body .= "<p>Date of previous check: {$last_date}</p>";
+	    $body .= "<p>Date of current check: {$current_date}</p>";
+
+	    add_filter( 'wp_mail_content_type', array( $this, 'set_html_content_type' ) );
 	    wp_mail(
 	    	$emails,
-		    __( "No new applications were received from the forms on site {$site_url} within {$interval} hours", 'bs_cf7m' ),
-		    $body
+		    $subject,
+		    $body,
+		    $headers
 	    );
-	    remove_filter( 'wp_mail_content_type', 'set_html_content_type' );
+	    remove_filter( 'wp_mail_content_type', array( $this, 'set_html_content_type' ) );
+    }
+
+	function set_html_content_type() {
+		return 'text/html';
+	}
+
+    public function alert_debug( $form_names ) {
+    	Bs_Cf7m_Shared_Features::bs_logit( $form_names, 'Alert!' );
     }
 
 }

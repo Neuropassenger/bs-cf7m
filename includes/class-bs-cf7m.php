@@ -173,6 +173,7 @@ class Bs_Cf7m {
         $this->loader->add_action( 'wpcf7_mail_sent', $plugin_admin, 'add_new_request' );
 
 		$this->loader->add_action( 'bs_cf7m_zero_requests', $plugin_admin, 'send_requests_alert', 10, 1 );
+		$this->loader->add_action( 'bs_cf7m_zero_requests', $plugin_admin, 'alert_debug', 10, 1 );
 
 	}
 
