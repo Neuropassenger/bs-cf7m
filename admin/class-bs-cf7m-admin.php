@@ -104,10 +104,16 @@ class Bs_Cf7m_Admin {
 
 	/* PLUGIN SETTINGS */
 
+	/**
+	 * Adds plugin settings page
+	 */
     public function add_plugin_settings_page() {
         add_options_page( 'Contact Form 7 Monitor', 'CF7 Monitor', 'manage_options', 'bs_cf7m_settings', array( $this, 'show_plugin_settings_page' ) );
     }
 
+	/**
+	 * Shows plugin settings page
+	 */
     function show_plugin_settings_page() {
         ?>
         <div class="wrap">
@@ -115,9 +121,7 @@ class Bs_Cf7m_Admin {
 
             <form action="options.php" method="POST">
                 <?php
-                // скрытые защитные поля
                 settings_fields( 'bs_cf7m_general' );
-                // секции с настройками (опциями)
                 do_settings_sections( 'bs_cf7m_settings' );
                 submit_button();
                 ?>
@@ -126,6 +130,9 @@ class Bs_Cf7m_Admin {
         <?php
     }
 
+	/**
+	 * Adds plugin settings fields
+	 */
     public function add_plugin_settings() {
 
 	    add_settings_section(
@@ -179,16 +186,26 @@ class Bs_Cf7m_Admin {
 
     }
 
+	/**
+     * Sanitizes active_forms checkbox fields
+     *
+	 * @param $options
+	 *
+	 * @return mixed
+	 */
     function sanitize_active_forms_callback( $options ) {
 
-	foreach( $options as $id => $option ){
-		$options[$id] = intval( $option );
-	}
+        foreach( $options as $id => $option ){
+            $options[$id] = intval( $option );
+        }
 
-	return $options;
+        return $options;
 
-}
+    }
 
+	/**
+	 * Shows the active_forms field
+	 */
 	function show_active_forms_field() {
 
 		$forms = get_posts( array(
@@ -208,10 +225,20 @@ class Bs_Cf7m_Admin {
 
 	}
 
+	/**
+     * Sanitizes the interval field
+     *
+	 * @param $value
+	 *
+	 * @return int
+	 */
 	function sanitize_interval_callback( $value ) {
 		return intval( $value );
 	}
 
+	/**
+	 * Shows the interval field
+	 */
 	function show_interval_field() {
 
 		$interval = get_option( 'bs_cf7m_interval' );
@@ -222,10 +249,20 @@ class Bs_Cf7m_Admin {
 
 	}
 
+	/**
+     * Sanitizes the emails field
+     *
+	 * @param $value
+	 *
+	 * @return string
+	 */
 	function sanitize_emails_callback( $value ) {
 		return sanitize_text_field( $value );
 	}
 
+	/**
+	 * Shows the emails field
+	 */
 	function show_emails_field() {
 
 		$emails = get_option( 'bs_cf7m_emails' );
@@ -236,6 +273,14 @@ class Bs_Cf7m_Admin {
 
 	}
 
+	/**
+     * Fires after updating the field with a check interval
+     * Reschedules the next CRON event to check
+     *
+	 * @param $old_value
+	 * @param $value
+	 * @param $option
+	 */
 	public function after_interval_update( $old_value, $value, $option ) {
 	    update_option( 'bs_cf7m_last_time', time() );
 
@@ -246,10 +291,16 @@ class Bs_Cf7m_Admin {
 		$schedule_check_forms_timestamp = wp_next_scheduled( 'bs_cf7m_check_forms' );
 		wp_unschedule_event( $schedule_check_forms_timestamp, 'bs_cf7m_check_forms' );
 	    wp_schedule_event( time(), 'bs_cf7m_interval', 'bs_cf7m_check_forms' );
-
-	    Bs_Cf7m_Shared_Features::bs_logit( 'Check', 'interval update' );
     }
 
+	/**
+     * Creates the custom CRON interval
+     *
+	 * @param $schedules
+	 * @param string $value
+	 *
+	 * @return mixed
+	 */
 	public function cron_interval( $schedules, $value = '' ) {
 		if ( !$value )
 			$value = intval( get_option( 'bs_cf7m_interval' ) ?: 24 );
@@ -264,6 +315,11 @@ class Bs_Cf7m_Admin {
 
     /* CONTACT FORM 7 MONITOR */
 
+	/**
+     * Adds a new application to the database
+     *
+	 * @param $contact_form
+	 */
     public function add_new_request( $contact_form ) {
 		global $wpdb;
 
@@ -278,6 +334,10 @@ class Bs_Cf7m_Admin {
 
     }
 
+	/**
+	 * Checks forms activity
+     * Starts when the next scheduled CRON check is triggered
+	 */
     public function check_forms() {
     	global $wpdb;
 	    $table_name = $wpdb->prefix . 'bs_cf7m_requests';
@@ -299,6 +359,11 @@ class Bs_Cf7m_Admin {
 	    update_option( 'bs_cf7m_last_time', time() );
     }
 
+	/**
+     * Sends email alerts
+     *
+	 * @param $not_used_form_names
+	 */
     public function send_requests_alert( $not_used_form_names ) {
     	if ( count( $not_used_form_names ) == 0 )
     		return;
@@ -340,12 +405,13 @@ class Bs_Cf7m_Admin {
 	    remove_filter( 'wp_mail_content_type', array( $this, 'set_html_content_type' ) );
     }
 
+	/**
+     * Enables HTML in emails
+     *
+	 * @return string
+	 */
 	function set_html_content_type() {
 		return 'text/html';
 	}
-
-    public function alert_debug( $form_names ) {
-    	Bs_Cf7m_Shared_Features::bs_logit( $form_names, 'Alert!' );
-    }
 
 }
