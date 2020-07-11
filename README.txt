@@ -12,7 +12,7 @@ The plugin allows you to track the operation of Contact Form 7 and sends notific
 
 == Installation ==
 
-1. Upload `bs-cf7m.php` to the `/wp-content/plugins/` directory
+1. Upload `bs-cf7m` to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
 
 == Changelog ==
