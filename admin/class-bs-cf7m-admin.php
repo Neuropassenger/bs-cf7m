@@ -290,7 +290,7 @@ class Bs_Cf7m_Admin {
 
 		$schedule_check_forms_timestamp = wp_next_scheduled( 'bs_cf7m_check_forms' );
 		wp_unschedule_event( $schedule_check_forms_timestamp, 'bs_cf7m_check_forms' );
-	    wp_schedule_event( time(), 'bs_cf7m_interval', 'bs_cf7m_check_forms' );
+	    wp_schedule_event( time() + $value * HOUR_IN_SECONDS, 'bs_cf7m_interval', 'bs_cf7m_check_forms' );
     }
 
 	/**
@@ -339,11 +339,12 @@ class Bs_Cf7m_Admin {
      * Starts when the next scheduled CRON check is triggered
 	 */
     public function check_forms() {
+	    $last_time = get_option( 'bs_cf7m_last_time' );
+	    $current_time = time();
+
     	global $wpdb;
 	    $table_name = $wpdb->prefix . 'bs_cf7m_requests';
-	    $last_time = get_option( 'bs_cf7m_last_time' );
 	    $active_forms = get_option( 'bs_cf7m_active_forms' );
-	    $current_time = time();
 	    $not_used_form_names = array();
 
 	    foreach ( $active_forms as $form_id ) {
