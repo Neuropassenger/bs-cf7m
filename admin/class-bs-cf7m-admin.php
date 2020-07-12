@@ -348,10 +348,12 @@ class Bs_Cf7m_Admin {
 	    $not_used_form_names = array();
 
 	    foreach ( $active_forms as $form_id ) {
-	    	$requests_count = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name} WHERE time > {$last_time} AND time < {$current_time}" );
+	    	$requests_count = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name} WHERE form_id = {$form_id} AND time > {$last_time} AND time < {$current_time}" );
 
-	    	if ( $requests_count == 0 )
+	    	if ( $requests_count < 1 )
 	    		$not_used_form_names[] = get_post( $form_id )->post_title;
+
+	    	Bs_Cf7m_Shared_Features::bs_logit( $requests_count, $form_id );
 	    }
 
 	    if ( count( $not_used_form_names ) > 0 )
@@ -370,17 +372,19 @@ class Bs_Cf7m_Admin {
     		return;
 
     	$emails = get_option( 'bs_cf7m_emails' );
-    	$interval = get_option( 'bs_cf7m_interval' );
+    	$last_time = get_option( 'bs_cf7m_last_time' );
+    	$current_time = time();
+    	$real_interval = floor( ($current_time - $last_time) / 3600 );
     	$emails = explode( ' ', $emails );
     	$domain = str_replace( 'http://', '', str_replace( 'https://', '', site_url() ) );
     	$settings_page_permalink = get_admin_url( null, 'options-general.php?page=bs_cf7m_settings' );
-	    $last_date = date( 'F j Y  H:i', get_option( 'bs_cf7m_last_time' ) );
-	    $current_date = date( 'F j Y  H:i', time() );
+	    $last_date = date( 'F j Y  H:i', $last_time );
+	    $current_date = date( 'F j Y  H:i', $current_time );
 
     	$headers = "From: Contact Form 7 Monitor <informer@{$domain}>";
     	$subject = get_bloginfo( 'name' ) . " |  No new applications were received";
     	$body = "<p>Hi there,</p>";
-    	$body .= "<p>No applications have been received from the forms below in the past {$interval} hours:</p>";
+    	$body .= "<p>No applications have been received from the forms below in the past {$real_interval} hours:</p>";
 
     	$body .= "<ul>";
     	foreach ( $not_used_form_names as $form_name ) {
