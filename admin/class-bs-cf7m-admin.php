@@ -345,19 +345,19 @@ class Bs_Cf7m_Admin {
     	global $wpdb;
 	    $table_name = $wpdb->prefix . 'bs_cf7m_requests';
 	    $active_forms = get_option( 'bs_cf7m_active_forms' );
-	    $not_used_form_names = array();
+	    $not_used_forms = array();
 
 	    foreach ( $active_forms as $form_id ) {
 	    	$requests_count = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name} WHERE form_id = {$form_id} AND time > {$last_time} AND time < {$current_time}" );
 
 	    	if ( $requests_count < 1 )
-	    		$not_used_form_names[] = get_post( $form_id )->post_title;
+	    		$not_used_forms[] = get_post( $form_id );
 
 	    	Bs_Cf7m_Shared_Features::bs_logit( $requests_count, $form_id );
 	    }
 
-	    if ( count( $not_used_form_names ) > 0 )
-	        do_action( 'bs_cf7m_zero_requests', $not_used_form_names );
+	    if ( count( $not_used_forms ) > 0 )
+	        do_action( 'bs_cf7m_zero_requests', $not_used_forms );
 
 	    update_option( 'bs_cf7m_last_time', time() );
     }
@@ -365,13 +365,15 @@ class Bs_Cf7m_Admin {
 	/**
      * Sends email alerts
      *
-	 * @param $not_used_form_names
+	 * @param $not_used_forms
 	 */
-    public function send_requests_alert( $not_used_form_names ) {
-    	if ( count( $not_used_form_names ) == 0 )
+    public function send_requests_alert( $not_used_forms ) {
+    	if ( count( $not_used_forms ) == 0 )
     		return;
 
     	$emails = get_option( 'bs_cf7m_emails' );
+    	// Admin email
+        $emails[] = get_bloginfo( 'admin_email' );
     	$last_time = get_option( 'bs_cf7m_last_time' );
     	$current_time = time();
     	$real_interval = floor( ($current_time - $last_time) / 3600 );
@@ -387,13 +389,14 @@ class Bs_Cf7m_Admin {
     	$body .= "<p>No applications have been received from the forms below in the past {$real_interval} hours:</p>";
 
     	$body .= "<ul>";
-    	foreach ( $not_used_form_names as $form_name ) {
-			$body .= "<li>{$form_name}</li>";
+    	foreach ( $not_used_forms as $form ) {
+    	    $edit_form_permalink = get_admin_url( null, "admin.php?page=wpcf7&post={$form->ID}&action=edit" );
+			$body .= "<li><a href='{$edit_form_permalink}'>{$form->post_title}</a></li>";
 	    }
 	    $body .= "</ul>";
 
     	$body .= "<p>Check the work of the specified forms, or increase the scan interval.</p>";
-    	$body .= "<p>This email was sent by the Contact Form 7 Monitor plugin. If you do not want to receive these emails anymore, delete your email address on the <a href='{$settings_page_permalink}'>plugin settings page</a>.</p>";
+    	$body .= "<p>This email was sent by the Contact Form 7 Monitor plugin from {$domain}. If you do not want to receive these emails anymore, delete your email address on the <a href='{$settings_page_permalink}'>plugin settings page</a>.</p>";
 
     	$body .= "<hr>";
 
