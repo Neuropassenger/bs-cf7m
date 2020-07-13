@@ -214,7 +214,7 @@ class Bs_Cf7m_Admin {
 			)
 		);
 
-		$active_forms = get_option( 'bs_cf7m_active_forms' );
+		$active_forms = get_option( 'bs_cf7m_active_forms', array() );
 
 		foreach ( $forms as $form ) {
 			?>
