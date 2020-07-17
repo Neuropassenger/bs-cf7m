@@ -17,5 +17,8 @@ The plugin allows you to track the operation of Contact Form 7 and sends notific
 
 == Changelog ==
 
+= 1.1.0 =
+* Activation & Deactivation.
+
 = 1.0 =
 * Contact Form 7 Monitor is ready!

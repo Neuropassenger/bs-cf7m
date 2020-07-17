@@ -30,7 +30,8 @@ class Bs_Cf7m_Deactivator {
 	 * @since    1.0.0
 	 */
 	public static function deactivate() {
-
+		$schedule_check_forms_timestamp = wp_next_scheduled( 'bs_cf7m_check_forms' );
+		wp_unschedule_event( $schedule_check_forms_timestamp, 'bs_cf7m_check_forms' );
 	}
 
 }

@@ -159,6 +159,9 @@ class Bs_Cf7m {
 
 		$plugin_admin = new Bs_Cf7m_Admin( $this->get_plugin_name(), $this->get_version() );
 
+		$this->loader->add_filter( 'plugins_api', $plugin_admin, 'plugin_info', 20, 3 );
+		$this->loader->add_filter( 'site_transient_update_plugins', $plugin_admin, 'push_update' );
+
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 

@@ -277,6 +277,8 @@ class Bs_Cf7m_Admin {
      * Fires after updating the field with a check interval
      * Reschedules the next CRON event to check
      *
+     * It is launched only if the field value has really been changed
+     *
 	 * @param $old_value
 	 * @param $value
 	 * @param $option
@@ -285,7 +287,7 @@ class Bs_Cf7m_Admin {
 	    update_option( 'bs_cf7m_last_time', time() );
 
 		add_filter( 'cron_schedules', function( $schedules ) use ( $value ){
-			return $this->cron_interval( $schedules, $value );
+			return self::cron_interval( $schedules, $value );
 		} );
 
 		$schedule_check_forms_timestamp = wp_next_scheduled( 'bs_cf7m_check_forms' );
@@ -301,7 +303,7 @@ class Bs_Cf7m_Admin {
 	 *
 	 * @return mixed
 	 */
-	public function cron_interval( $schedules, $value = '' ) {
+	public static function cron_interval( $schedules, $value = '' ) {
 		if ( !$value )
 			$value = intval( get_option( 'bs_cf7m_interval' ) ?: 24 );
 
@@ -421,5 +423,106 @@ class Bs_Cf7m_Admin {
 	function set_html_content_type() {
 		return 'text/html';
 	}
+
+	public function plugin_info( $res, $action, $args ) {
+
+		// do nothing if this is not about getting plugin information
+		if( 'plugin_information' !== $action )
+			return false;
+
+		Bs_Cf7m_Shared_Features::bs_logit( $action, 'plugin_info() | $action' );
+
+		$plugin_slug = 'bs-cf7m';
+
+		// do nothing if it is not our plugin
+		if( $plugin_slug !== $args->slug )
+			return false;
+
+		// trying to get from cache first
+		if( false == $remote = get_transient( 'bs_update_' . $plugin_slug ) ) {
+
+			// bs-cf7m.json is the file with the actual plugin information on your server
+			$remote = wp_remote_get( 'https://dev.neuropassenger.ru/rep/bs-cf7m.json', array(
+					'timeout' => 10,
+					'headers' => array(
+						'Accept' => 'application/json'
+					) )
+			);
+
+			if ( ! is_wp_error( $remote ) && isset( $remote['response']['code'] ) && $remote['response']['code'] == 200 && ! empty( $remote['body'] ) ) {
+				set_transient( 'bs_update_' . $plugin_slug, $remote, 43200 ); // 12 hours cache
+			}
+
+		}
+
+		if( ! is_wp_error( $remote ) && isset( $remote['response']['code'] ) && $remote['response']['code'] == 200 && ! empty( $remote['body'] ) ) {
+
+			$remote = json_decode( $remote['body'] );
+			$res = new stdClass();
+
+			$res->name = $remote->name;
+			$res->slug = $plugin_slug;
+			$res->version = $remote->version;
+			$res->tested = $remote->tested;
+			$res->requires = $remote->requires;
+			$res->author = '<a href="https://neuropassenger.ru">Oleg Sokolov</a>';
+			$res->download_link = $remote->download_url;
+			$res->trunk = $remote->download_url;
+			$res->requires_php = '7.3';
+			$res->last_updated = $remote->last_updated;
+			$res->sections = array(
+				'description' => $remote->sections->description,
+				'installation' => $remote->sections->installation,
+				'changelog' => $remote->sections->changelog
+			);
+
+			return $res;
+
+		}
+
+	}
+
+	public function push_update( $transient ) {
+
+		if ( empty($transient->checked ) ) {
+			return $transient;
+		}
+
+		// trying to get from cache first, to disable cache comment 10,20,21,22,24
+		if( false == $remote = get_transient( 'bs_upgrade_bs-cf7m' ) ) {
+
+			// info.json is the file with the actual plugin information on your server
+			$remote = wp_remote_get( 'https://dev.neuropassenger.ru/rep/bs-cf7m.json', array(
+					'timeout' => 10,
+					'headers' => array(
+						'Accept' => 'application/json'
+					) )
+			);
+
+			if ( !is_wp_error( $remote ) && isset( $remote['response']['code'] ) && $remote['response']['code'] == 200 && !empty( $remote['body'] ) ) {
+				set_transient( 'bs_upgrade_bs-cf7m', $remote, 43200 ); // 12 hours cache
+			}
+
+		}
+
+		if( $remote ) {
+
+			$remote = json_decode( $remote['body'] );
+
+			if( $remote && version_compare( '1.0', $remote->version, '<' ) && version_compare($remote->requires, get_bloginfo('version'), '<' ) ) {
+				$res = new stdClass();
+				$res->slug = 'bs-cf7m';
+				$res->plugin = 'bs-cf7m/bs-cf7m.php';
+				$res->new_version = $remote->version;
+				$res->tested = $remote->tested;
+				$res->package = $remote->download_url;
+				$transient->response[$res->plugin] = $res;
+				//$transient->checked[$res->plugin] = $remote->version;
+			}
+
+		}
+
+		return $transient;
+    }
 
 }
