@@ -16,7 +16,7 @@
  * Plugin Name:       Contact Form 7 Monitor
  * Plugin URI:        https://github.com/Neuropassenger/bs-cf7m
  * Description:       The plugin allows you to track the operation of Contact Form 7 and sends notifications if new applications are not created.
- * Version:           1.1.1
+ * Version:           1.1.2
  * Author:            Oleg Sokolov
  * Author URI:        https://neuropassenger.ru
  * License:           GPL-2.0+
