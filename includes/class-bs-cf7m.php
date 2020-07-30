@@ -40,6 +40,15 @@ class Bs_Cf7m {
 	protected $loader;
 
 	/**
+	 * The loader that's responsible for maintaining updates of the plugin.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      Bs_Cf7m_Loader    $loader    Maintains and registers all hooks for the plugin.
+	 */
+	protected $updater;
+
+	/**
 	 * The unique identifier of this plugin.
 	 *
 	 * @since    1.0.0
@@ -127,7 +136,17 @@ class Bs_Cf7m {
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-bs-cf7m-public.php';
 
+		/**
+		 * The class responsible for plugin updates.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'libs/plugin-update-checker/plugin-update-checker.php';
+
 		$this->loader = new Bs_Cf7m_Loader();
+		$this->updater = Puc_v4_Factory::buildUpdateChecker(
+			'https://dev.neuropassenger.ru/rep/bs-cf7m-update-manifest.json',
+			plugin_dir_path( dirname( __FILE__ ) ) . 'bs-cf7m.php', // Full path to the main plugin file or functions.php.
+			$this->plugin_name
+		);
 
 	}
 
@@ -159,9 +178,6 @@ class Bs_Cf7m {
 
 		$plugin_admin = new Bs_Cf7m_Admin( $this->get_plugin_name(), $this->get_version() );
 
-		$this->loader->add_filter( 'plugins_api', $plugin_admin, 'plugin_info', 20, 3 );
-		$this->loader->add_filter( 'site_transient_update_plugins', $plugin_admin, 'push_update' );
-
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 
@@ -174,6 +190,8 @@ class Bs_Cf7m {
         $this->loader->add_filter( 'cron_schedules', $plugin_admin, 'cron_interval' );
         $this->loader->add_action( 'bs_cf7m_check_forms', $plugin_admin, 'check_forms' );
 		$this->loader->add_action( 'bs_cf7m_zero_requests', $plugin_admin, 'send_requests_alert', 10, 1 );
+
+		$this->loader->add_action( 'wp_head', $plugin_admin, 'debug' );
 
 	}
 
