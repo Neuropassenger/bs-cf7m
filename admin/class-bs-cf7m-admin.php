@@ -341,6 +341,7 @@ class Bs_Cf7m_Admin {
      * Starts when the next scheduled CRON check is triggered
 	 */
     public function check_forms() {
+
 	    $last_time = get_option( 'bs_cf7m_last_time' );
 	    $current_time = time();
 
@@ -354,8 +355,6 @@ class Bs_Cf7m_Admin {
 
 	    	if ( $requests_count < 1 )
 	    		$not_used_forms[] = get_post( $form_id );
-
-	    	Bs_Cf7m_Shared_Features::bs_logit( $requests_count, $form_id );
 	    }
 
 	    if ( count( $not_used_forms ) > 0 )
@@ -370,16 +369,22 @@ class Bs_Cf7m_Admin {
 	 * @param $not_used_forms
 	 */
     public function send_requests_alert( $not_used_forms ) {
-    	if ( count( $not_used_forms ) == 0 )
+    	if ( count( $not_used_forms ) < 1 )
     		return;
 
     	$emails = get_option( 'bs_cf7m_emails' );
+
+    	if ( empty( $emails ) )
+    	    $emails = array();
+    	else
+    	    $emails = explode( ' ', $emails );
+
     	// Admin email
         $emails[] = get_bloginfo( 'admin_email' );
+
     	$last_time = get_option( 'bs_cf7m_last_time' );
     	$current_time = time();
     	$real_interval = floor( ($current_time - $last_time) / 3600 );
-    	$emails = explode( ' ', $emails );
     	$domain = str_replace( 'http://', '', str_replace( 'https://', '', site_url() ) );
     	$settings_page_permalink = get_admin_url( null, 'options-general.php?page=bs_cf7m_settings' );
 	    $last_date = date( 'F j Y  H:i', $last_time );
@@ -406,7 +411,7 @@ class Bs_Cf7m_Admin {
 	    $body .= "<p>Date of current check: {$current_date}</p>";
 
 	    add_filter( 'wp_mail_content_type', array( $this, 'set_html_content_type' ) );
-	    wp_mail(
+	    $mail_sent = wp_mail(
 	    	$emails,
 		    $subject,
 		    $body,

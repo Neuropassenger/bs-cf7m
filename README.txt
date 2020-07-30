@@ -20,6 +20,9 @@ The plugin allows you to track the operation of Contact Form 7 and sends notific
 = 1.2.5 =
 * Updates Mechanism.
 
+= 1.1.2 =
+* Bug Fixes with Emails & CRON.
+
 = 1.1.1 =
 * Activation & Deactivation.
 
