@@ -16,7 +16,7 @@
  * Plugin Name:       Contact Form 7 Monitor
  * Plugin URI:        https://github.com/Neuropassenger/bs-cf7m
  * Description:       Tracking Contact Form 7.
- * Version:           1.3.0
+ * Version:           1.3.1
  * Author:            Oleg Sokolov
  * Author URI:        https://neuropassenger.ru
  * License:           GPL-2.0+
@@ -35,7 +35,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'BS_CF7M_VERSION', '1.3.0' );
+define( 'BS_CF7M_VERSION', '1.3.1' );
 
 /**
  * The code that runs during plugin activation.
