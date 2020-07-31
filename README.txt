@@ -19,7 +19,7 @@ The plugin allows you to track the operation of Contact Form 7 and sends notific
 == Changelog ==
 
 = 1.3.1 =
-* Fixed automatic increase inspection interval.
+* Fixed automatic increase scan interval.
 
 = 1.3.0 =
 * Added the ability to automatically increase the scan interval when a check fails.
