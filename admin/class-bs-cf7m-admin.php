@@ -391,9 +391,10 @@ class Bs_Cf7m_Admin {
 
 	    /* Increase the scan interval if necessary */
         /* TODO: включить проверку каждые 24 часа */
-	    if ( count( $not_used_forms ) == count( $active_forms ) ) {
+        $auto_increase_interval = get_option( 'bs_cf7m_auto_increase_interval' );
+	    if ( count( $not_used_forms ) == count( $active_forms ) && $auto_increase_interval == 'yes' ) {
 	    	$current_interval = get_option( 'bs_cf7m_interval' );
-	    	$this->after_interval_update( null, $current_interval + 1, null );
+	    	update_option( 'bs_cf7m_interval', $current_interval + 24 );
 	    }
 
 	    if ( count( $not_used_forms ) > 0 )
