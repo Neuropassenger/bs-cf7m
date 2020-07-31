@@ -189,7 +189,7 @@ class Bs_Cf7m {
         $this->loader->add_action( 'update_option_bs_cf7m_interval', $plugin_admin, 'after_interval_update', 10, 3 );
         $this->loader->add_filter( 'cron_schedules', $plugin_admin, 'cron_interval' );
         $this->loader->add_action( 'bs_cf7m_check_forms', $plugin_admin, 'check_forms' );
-		$this->loader->add_action( 'bs_cf7m_zero_requests', $plugin_admin, 'send_requests_alert', 10, 1 );
+		$this->loader->add_action( 'bs_cf7m_zero_requests', $plugin_admin, 'send_requests_alert' );
 
 		$this->loader->add_action( 'wp_head', $plugin_admin, 'debug' );
 

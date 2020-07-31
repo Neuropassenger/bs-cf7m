@@ -17,8 +17,11 @@ The plugin allows you to track the operation of Contact Form 7 and sends notific
 
 == Changelog ==
 
+= 1.2.6 =
+* Fixed bug with tracking only one form.
+
 = 1.2.5 =
-* Updates Mechanism.
+* Update Mechanism.
 
 = 1.1.2 =
 * Bug Fixes with Emails & CRON.

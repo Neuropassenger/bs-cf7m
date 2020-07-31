@@ -184,6 +184,20 @@ class Bs_Cf7m_Admin {
 		    'bs_cf7m_main_setting_section'
 	    );
 
+	    register_setting(
+            'bs_cf7m_general',
+		    'bs_cf7m_auto_increase_interval',
+		    array( 'sanitize_callback' => array( $this, 'sanitize_auto_increase_interval_callback' ) )
+        );
+
+	    add_settings_field(
+	    	'bs_cf7m_auto_increase_interval_field',
+		    __( 'Automatically increase the interval by 24 hours after a failed check', 'bs-cf7m' ),
+		    array( $this, 'show_auto_increase_interval_field' ),
+		    'bs_cf7m_settings',
+		    'bs_cf7m_main_setting_section'
+	    );
+
     }
 
 	/**
@@ -270,6 +284,17 @@ class Bs_Cf7m_Admin {
 		?>
         <p><input style="width: 300px;" type='text' name='bs_cf7m_emails' value='<?php echo $emails; ?>'></p>
 		<?php
+
+	}
+
+	function sanitize_auto_increase_interval_callback( $value ) {
+
+	}
+
+	/**
+	 * Shows the increase interval checkbox
+	 */
+	function show_auto_increase_interval_field() {
 
 	}
 
@@ -396,6 +421,15 @@ class Bs_Cf7m_Admin {
     	$body .= "<p>No applications have been received from the forms below in the past {$real_interval} hours:</p>";
 
     	$body .= "<ul>";
+
+    	/* FIX for do_action array with single arg */
+	    /* TODO: Нужно как-то отказаться от этого костыля 🤔 */
+	    if ( is_object( $not_used_forms ) ) {
+	    	$good_array = array();
+	    	$good_array[] = $not_used_forms;
+	    	$not_used_forms = $good_array;
+	    }
+
     	foreach ( $not_used_forms as $form ) {
     	    $edit_form_permalink = get_admin_url( null, "admin.php?page=wpcf7&post={$form->ID}&action=edit" );
 			$body .= "<li><a href='{$edit_form_permalink}'>{$form->post_title}</a></li>";
