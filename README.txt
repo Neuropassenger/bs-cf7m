@@ -35,3 +35,7 @@ The plugin allows you to track the operation of Contact Form 7 and sends notific
 
 = 1.0 =
 * Contact Form 7 Monitor is ready!
+
+== TODO ==
+
+* Deactivation features (database cleanup).

@@ -477,8 +477,4 @@ class Bs_Cf7m_Admin {
 		return 'text/html';
 	}
 
-	public function debug() {
-	    var_dump( plugin_dir_path( dirname( __FILE__ ) ) . 'bs-cf7m.php' );
-    }
-
 }

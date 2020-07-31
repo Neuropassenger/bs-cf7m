@@ -191,8 +191,6 @@ class Bs_Cf7m {
         $this->loader->add_action( 'bs_cf7m_check_forms', $plugin_admin, 'check_forms' );
 		$this->loader->add_action( 'bs_cf7m_zero_requests', $plugin_admin, 'send_requests_alert' );
 
-		$this->loader->add_action( 'wp_head', $plugin_admin, 'debug' );
-
 	}
 
 	/**
