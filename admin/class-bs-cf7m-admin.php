@@ -288,14 +288,21 @@ class Bs_Cf7m_Admin {
 	}
 
 	function sanitize_auto_increase_interval_callback( $value ) {
-
+		return sanitize_text_field( $value );
 	}
 
 	/**
 	 * Shows the increase interval checkbox
 	 */
 	function show_auto_increase_interval_field() {
+		$auto_increase_interval = get_option( 'bs_cf7m_auto_increase_interval' );
+        ?>
 
+		<p>
+			<input type='checkbox' name='bs_cf7m_auto_increase_interval' <?php checked( $auto_increase_interval, 'yes' ); ?> value='yes'>
+		</p>
+
+		<?php
 	}
 
 	/**
@@ -305,7 +312,7 @@ class Bs_Cf7m_Admin {
      * It is launched only if the field value has really been changed
      *
 	 * @param $old_value
-	 * @param $value
+	 * @param $value - interval in hours
 	 * @param $option
 	 */
 	public function after_interval_update( $old_value, $value, $option ) {
@@ -380,6 +387,13 @@ class Bs_Cf7m_Admin {
 
 	    	if ( $requests_count < 1 )
 	    		$not_used_forms[] = get_post( $form_id );
+	    }
+
+	    /* Increase the scan interval if necessary */
+        /* TODO: включить проверку каждые 24 часа */
+	    if ( count( $not_used_forms ) == count( $active_forms ) ) {
+	    	$current_interval = get_option( 'bs_cf7m_interval' );
+	    	$this->after_interval_update( null, $current_interval + 1, null );
 	    }
 
 	    if ( count( $not_used_forms ) > 0 )

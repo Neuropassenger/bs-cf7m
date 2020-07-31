@@ -14,8 +14,12 @@ The plugin allows you to track the operation of Contact Form 7 and sends notific
 
 1. Upload `bs-cf7m` to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
+3. Set up a custom SMTP server for sending emails in the wp-config.php file.
 
 == Changelog ==
+
+= 1.3.0 =
+* Added the ability to automatically increase the scan interval when a check fails.
 
 = 1.2.6 =
 * Fixed bug with tracking only one form.
