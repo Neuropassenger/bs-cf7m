@@ -150,7 +150,7 @@ class Bs_Cf7m_Admin {
 
         add_settings_field(
             'bs_cf7m_active_forms_field',
-            __( 'What forms should be observed', 'bs-cf7m' ),
+            __( 'What forms should be scanned', 'bs-cf7m' ),
             array( $this, 'show_active_forms_field' ),
             'bs_cf7m_settings',
             'bs_cf7m_main_setting_section'
@@ -164,11 +164,25 @@ class Bs_Cf7m_Admin {
 
         add_settings_field(
             'bs_cf7m_interval_field',
-            __( 'Inspection Interval (in hours)', 'bs-cf7m' ),
+            __( 'Scanning Interval (in hours)', 'bs-cf7m' ),
             array( $this, 'show_interval_field' ),
             'bs_cf7m_settings',
             'bs_cf7m_main_setting_section'
         );
+
+	    register_setting(
+		    'bs_cf7m_general',
+		    'bs_cf7m_auto_increase_interval',
+		    array( 'sanitize_callback' => array( $this, 'sanitize_auto_increase_interval_callback' ) )
+	    );
+
+	    add_settings_field(
+		    'bs_cf7m_auto_increase_interval_field',
+		    __( 'Automatically increase the interval by 24 hours after a failed scan', 'bs-cf7m' ),
+		    array( $this, 'show_auto_increase_interval_field' ),
+		    'bs_cf7m_settings',
+		    'bs_cf7m_main_setting_section'
+	    );
 
 	    register_setting(
 		    'bs_cf7m_general',
@@ -180,20 +194,6 @@ class Bs_Cf7m_Admin {
 		    'bs_cf7m_emails_field',
 		    __( 'Email addresses for notifications (separated by a space)', 'bs-cf7m' ),
 		    array( $this, 'show_emails_field' ),
-		    'bs_cf7m_settings',
-		    'bs_cf7m_main_setting_section'
-	    );
-
-	    register_setting(
-            'bs_cf7m_general',
-		    'bs_cf7m_auto_increase_interval',
-		    array( 'sanitize_callback' => array( $this, 'sanitize_auto_increase_interval_callback' ) )
-        );
-
-	    add_settings_field(
-	    	'bs_cf7m_auto_increase_interval_field',
-		    __( 'Automatically increase the interval by 24 hours after a failed check', 'bs-cf7m' ),
-		    array( $this, 'show_auto_increase_interval_field' ),
 		    'bs_cf7m_settings',
 		    'bs_cf7m_main_setting_section'
 	    );
@@ -282,7 +282,7 @@ class Bs_Cf7m_Admin {
 		$emails = get_option( 'bs_cf7m_emails' );
 
 		?>
-        <p><input style="width: 300px;" type='text' name='bs_cf7m_emails' value='<?php echo $emails; ?>'></p>
+        <p><input placeholder="one@example.com two@example.com" style="width: 300px;" type='text' name='bs_cf7m_emails' value='<?php echo $emails; ?>'></p>
 		<?php
 
 	}
@@ -389,18 +389,19 @@ class Bs_Cf7m_Admin {
 	    		$not_used_forms[] = get_post( $form_id );
 	    }
 
-	    /* Increase the scan interval if necessary */
-        /* TODO: включить проверку каждые 24 часа */
-        $auto_increase_interval = get_option( 'bs_cf7m_auto_increase_interval' );
-	    if ( count( $not_used_forms ) == count( $active_forms ) && $auto_increase_interval == 'yes' ) {
-	    	$current_interval = get_option( 'bs_cf7m_interval' );
-	    	update_option( 'bs_cf7m_interval', $current_interval + 24 );
-	    }
-
 	    if ( count( $not_used_forms ) > 0 )
 	        do_action( 'bs_cf7m_zero_requests', $not_used_forms );
 
 	    update_option( 'bs_cf7m_last_time', time() );
+
+	    /* Increase the scan interval if necessary */
+	    /* TODO: включить проверку каждые 24 часа */
+	    $auto_increase_interval = get_option( 'bs_cf7m_auto_increase_interval' );
+	    if ( count( $not_used_forms ) == count( $active_forms ) && $auto_increase_interval == 'yes' ) {
+		    $current_interval = get_option( 'bs_cf7m_interval' );
+		    update_option( 'bs_cf7m_interval', $current_interval + 24 );
+	    }
+
     }
 
 	/**
@@ -409,10 +410,19 @@ class Bs_Cf7m_Admin {
 	 * @param $not_used_forms
 	 */
     public function send_requests_alert( $not_used_forms ) {
+	    /* FIX for do_action array with single arg when only one form activated */
+	    /* TODO: Нужно как-то отказаться от этого костыля 🤔 */
+	    if ( is_object( $not_used_forms ) ) {
+		    $good_array = array();
+		    $good_array[] = $not_used_forms;
+		    $not_used_forms = $good_array;
+	    }
+
     	if ( count( $not_used_forms ) < 1 )
     		return;
 
     	$emails = get_option( 'bs_cf7m_emails' );
+    	$active_forms = get_option( 'bs_cf7m_active_forms' );
 
     	if ( empty( $emails ) )
     	    $emails = array();
@@ -429,21 +439,14 @@ class Bs_Cf7m_Admin {
     	$settings_page_permalink = get_admin_url( null, 'options-general.php?page=bs_cf7m_settings' );
 	    $last_date = date( 'F j Y  H:i', $last_time );
 	    $current_date = date( 'F j Y  H:i', $current_time );
+	    $next_date = date( 'F j Y  H:i', wp_next_scheduled( 'bs_cf7m_check_forms' ) );
 
     	$headers = "From: Contact Form 7 Monitor <informer@{$domain}>";
     	$subject = get_bloginfo( 'name' ) . " |  No new applications were received";
-    	$body = "<p>Hi there,</p>";
+    	$body = "<p>Hi there 🙋‍♂️</p>";
     	$body .= "<p>No applications have been received from the forms below in the past {$real_interval} hours:</p>";
 
     	$body .= "<ul>";
-
-    	/* FIX for do_action array with single arg */
-	    /* TODO: Нужно как-то отказаться от этого костыля 🤔 */
-	    if ( is_object( $not_used_forms ) ) {
-	    	$good_array = array();
-	    	$good_array[] = $not_used_forms;
-	    	$not_used_forms = $good_array;
-	    }
 
     	foreach ( $not_used_forms as $form ) {
     	    $edit_form_permalink = get_admin_url( null, "admin.php?page=wpcf7&post={$form->ID}&action=edit" );
@@ -451,13 +454,18 @@ class Bs_Cf7m_Admin {
 	    }
 	    $body .= "</ul>";
 
-    	$body .= "<p>Check the work of the specified forms, or increase the scan interval.</p>";
+    	$body .= "<p>Check the work of the specified forms, or increase the scanning interval.</p>";
     	$body .= "<p>This email was sent by the Contact Form 7 Monitor plugin from {$domain}. If you do not want to receive these emails anymore, delete your email address on the <a href='{$settings_page_permalink}'>plugin settings page</a>.</p>";
+
+    	if ( get_option( 'bs_cf7m_auto_increase_interval' ) == 'yes' && count( $active_forms ) == count( $not_used_forms ) ) {
+		    $body .= "<p>Since there were no new applications for any of the forms, the scanning interval was automatically increased by 24 hours. It can be changed at any time in the plugin settings.</p>";
+	    }
 
     	$body .= "<hr>";
 
-	    $body .= "<p>Date of previous check: {$last_date}</p>";
-	    $body .= "<p>Date of current check: {$current_date}</p>";
+	    $body .= "<p>Previous scan: {$last_date}</p>";
+	    $body .= "<p>Current scan: {$current_date}</p>";
+	    $body .= "<p>Next scan: {$next_date}</p>";
 
 	    add_filter( 'wp_mail_content_type', array( $this, 'set_html_content_type' ) );
 	    $mail_sent = wp_mail(
