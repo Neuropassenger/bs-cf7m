@@ -434,16 +434,16 @@ class Bs_Cf7m_Admin {
 
     	$last_time = get_option( 'bs_cf7m_last_time' );
     	$current_time = time();
+	    $next_time = wp_next_scheduled( 'bs_cf7m_check_forms' );
     	$real_interval = floor( ($current_time - $last_time) / 3600 );
     	$domain = str_replace( 'http://', '', str_replace( 'https://', '', site_url() ) );
     	$settings_page_permalink = get_admin_url( null, 'options-general.php?page=bs_cf7m_settings' );
 	    $last_date = date( 'F j Y  H:i', $last_time );
 	    $current_date = date( 'F j Y  H:i', $current_time );
-	    $next_date = date( 'F j Y  H:i', wp_next_scheduled( 'bs_cf7m_check_forms' ) );
 
     	$headers = "From: Contact Form 7 Monitor <informer@{$domain}>";
     	$subject = get_bloginfo( 'name' ) . " |  No new applications were received";
-    	$body = "<p>Hi there 🙋‍♂️</p>";
+    	$body = "<p>Hi there,️</p>";
     	$body .= "<p>No applications have been received from the forms below in the past {$real_interval} hours:</p>";
 
     	$body .= "<ul>";
@@ -459,7 +459,10 @@ class Bs_Cf7m_Admin {
 
     	if ( get_option( 'bs_cf7m_auto_increase_interval' ) == 'yes' && count( $active_forms ) == count( $not_used_forms ) ) {
 		    $body .= "<p>Since there were no new applications for any of the forms, the scanning interval was automatically increased by 24 hours. It can be changed at any time in the plugin settings.</p>";
-	    }
+	        $next_time += 86400;
+    	}
+
+	    $next_date = date( 'F j Y  H:i', $next_time );
 
     	$body .= "<hr>";
 
