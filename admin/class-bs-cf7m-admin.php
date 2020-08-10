@@ -455,20 +455,21 @@ class Bs_Cf7m_Admin {
 	    $body .= "</ul>";
 
     	$body .= "<p>Check the work of the specified forms, or increase the scanning interval.</p>";
-    	$body .= "<p>This email was sent by the Contact Form 7 Monitor plugin from {$domain}. If you do not want to receive these emails anymore, delete your email address on the <a href='{$settings_page_permalink}'>plugin settings page</a>.</p>";
 
     	if ( get_option( 'bs_cf7m_auto_increase_interval' ) == 'yes' && count( $active_forms ) == count( $not_used_forms ) ) {
 		    $body .= "<p>Since there were no new applications for any of the forms, the scanning interval was automatically increased by 24 hours. It can be changed at any time in the plugin settings.</p>";
 	        $next_time += 86400;
     	}
 
+	    $body .= "<p>This email was sent by the Contact Form 7 Monitor plugin from {$domain}. If you do not want to receive these emails anymore, delete your email address on the <a href='{$settings_page_permalink}'>plugin settings page</a>.</p>";
+
 	    $next_date = date( 'F j Y  H:i', $next_time );
 
     	$body .= "<hr>";
 
-	    $body .= "<p>Previous scan: {$last_date}</p>";
-	    $body .= "<p>Current scan: {$current_date}</p>";
-	    $body .= "<p>Next scan: {$next_date}</p>";
+	    $body .= "<p>Previous scan: {$last_date} UTC</p>";
+	    $body .= "<p>Current scan: {$current_date} UTC</p>";
+	    $body .= "<p>Next scan: {$next_date} UTC</p>";
 
 	    add_filter( 'wp_mail_content_type', array( $this, 'set_html_content_type' ) );
 	    $mail_sent = wp_mail(
