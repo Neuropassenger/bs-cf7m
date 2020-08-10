@@ -335,7 +335,7 @@ class Bs_Cf7m_Admin {
 	 *
 	 * @return mixed
 	 */
-	public static function cron_interval( $schedules, $value = '' ) {
+	public static function cron_interval( $schedules, $value = false ) {
 		if ( !$value )
 			$value = intval( get_option( 'bs_cf7m_interval' ) ?: 24 );
 
@@ -456,12 +456,12 @@ class Bs_Cf7m_Admin {
 
     	$body .= "<p>Check the work of the specified forms, or increase the scanning interval.</p>";
 
-    	if ( get_option( 'bs_cf7m_auto_increase_interval' ) == 'yes' && count( $active_forms ) == count( $not_used_forms ) ) {
-		    $body .= "<p>Since there were no new applications for any of the forms, the scanning interval was automatically increased by 24 hours. It can be changed at any time in the plugin settings.</p>";
-	        $next_time += 86400;
-    	}
+        if ( get_option( 'bs_cf7m_auto_increase_interval' ) == 'yes' && count( $active_forms ) == count( $not_used_forms ) ) {
+            $body .= "<p>Since there were no new applications for any of the forms, the scanning interval was automatically increased by 24 hours. It can be changed at any time in the plugin settings.</p>";
+            $next_time += 86400;
+        }
 
-	    $body .= "<p>This email was sent by the Contact Form 7 Monitor plugin from {$domain}. If you do not want to receive these emails anymore, delete your email address on the <a href='{$settings_page_permalink}'>plugin settings page</a>.</p>";
+    	$body .= "<p>This email was sent by the Contact Form 7 Monitor plugin from {$domain}. If you do not want to receive these emails anymore, delete your email address on the <a href='{$settings_page_permalink}'>plugin settings page</a>.</p>";
 
 	    $next_date = date( 'F j Y  H:i', $next_time );
 
