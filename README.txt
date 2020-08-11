@@ -18,6 +18,13 @@ The plugin allows you to track the operation of Contact Form 7 and sends notific
 
 == Changelog ==
 
+= 1.3.5 =
+* CRON fixes.
+
+= 1.3.4 =
+* Improved the content of emails.
+* CRON fixes.
+
 = 1.3.3 =
 * Improved the content of emails.
 

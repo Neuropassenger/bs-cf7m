@@ -54,6 +54,7 @@ class Bs_Cf7m_Activator {
 		wp_unschedule_event( $schedule_check_forms_timestamp, 'bs_cf7m_check_forms' );
 
 		$exist_interval = intval( get_option( 'bs_cf7m_interval' ) ?: 24 );
+		Bs_Cf7m_Shared_Features::bs_logit($exist_interval, '$exist_interval');
 		wp_schedule_event( time() + $exist_interval * HOUR_IN_SECONDS, 'bs_cf7m_interval', 'bs_cf7m_check_forms' );
 
 	}

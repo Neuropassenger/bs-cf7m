@@ -316,11 +316,9 @@ class Bs_Cf7m_Admin {
 	 * @param $option
 	 */
 	public function after_interval_update( $old_value, $value, $option ) {
-	    update_option( 'bs_cf7m_last_time', time() );
-
-		add_filter( 'cron_schedules', function( $schedules ) use ( $value ){
-			return self::cron_interval( $schedules, $value );
-		} );
+	    add_filter( 'cron_schedules', function( $schedules ) use ( $value ){
+            return self::cron_interval( $schedules, $value );
+        } );
 
 		$schedule_check_forms_timestamp = wp_next_scheduled( 'bs_cf7m_check_forms' );
 		wp_unschedule_event( $schedule_check_forms_timestamp, 'bs_cf7m_check_forms' );
@@ -335,7 +333,7 @@ class Bs_Cf7m_Admin {
 	 *
 	 * @return mixed
 	 */
-	public static function cron_interval( $schedules, $value = false ) {
+	public static function cron_interval( $schedules, $value = '' ) {
 		if ( !$value )
 			$value = intval( get_option( 'bs_cf7m_interval' ) ?: 24 );
 
@@ -373,11 +371,11 @@ class Bs_Cf7m_Admin {
      * Starts when the next scheduled CRON check is triggered
 	 */
     public function check_forms() {
+        global $wpdb;
 
-	    $last_time = get_option( 'bs_cf7m_last_time' );
+        $last_time = get_option( 'bs_cf7m_last_time' );
 	    $current_time = time();
 
-    	global $wpdb;
 	    $table_name = $wpdb->prefix . 'bs_cf7m_requests';
 	    $active_forms = get_option( 'bs_cf7m_active_forms' );
 	    $not_used_forms = array();
@@ -389,18 +387,18 @@ class Bs_Cf7m_Admin {
 	    		$not_used_forms[] = get_post( $form_id );
 	    }
 
-	    if ( count( $not_used_forms ) > 0 )
-	        do_action( 'bs_cf7m_zero_requests', $not_used_forms );
-
-	    update_option( 'bs_cf7m_last_time', time() );
-
-	    /* Increase the scan interval if necessary */
-	    /* TODO: включить проверку каждые 24 часа */
+	    // Increase the scan interval if necessary
+	    // TODO: включить проверку каждые 24 часа
 	    $auto_increase_interval = get_option( 'bs_cf7m_auto_increase_interval' );
 	    if ( count( $not_used_forms ) == count( $active_forms ) && $auto_increase_interval == 'yes' ) {
 		    $current_interval = get_option( 'bs_cf7m_interval' );
-		    update_option( 'bs_cf7m_interval', $current_interval + 24 );
+            update_option( 'bs_cf7m_interval', $current_interval + 24 );
 	    }
+
+        if ( count( $not_used_forms ) > 0 )
+            do_action( 'bs_cf7m_zero_requests', $not_used_forms );
+
+        update_option( 'bs_cf7m_last_time', time() );
 
     }
 
@@ -489,5 +487,9 @@ class Bs_Cf7m_Admin {
 	function set_html_content_type() {
 		return 'text/html';
 	}
+
+	public function debug() {
+        Bs_Cf7m_Shared_Features::bs_logit(true, 'debug');
+    }
 
 }
